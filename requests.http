@@ -1,0 +1,144 @@
+# ################################### #
+# IntelliJ IDEA http requests scratch #
+# ################################### #
+
+
+### Add user
+#@no-redirect
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "{{$random.alphabetic(10)}}",
+  "password": "123"
+}
+
+> {%
+if (response.status === 200) {
+    client.global.set('username', response.body.username);
+    client.global.set('password', '123');
+    client.global.set('userId', response.body.id);
+}
+ %}
+
+
+### Auth form-url
+#@no-redirect
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}&password={{password}}
+
+> {%
+    if (response.status === 200) {
+        var cookie = JSON.parse(JSON.stringify(response.headers))['Set-Cookie'];
+        client.log(cookie);
+        client.global.set('auth_cookie', cookie);
+    }
+%}
+
+
+### Auth json
+#@no-redirect
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+    if (response.status === 200) {
+        var cookie = JSON.parse(JSON.stringify(response.headers))['Set-Cookie'];
+        client.log(cookie);
+        client.global.set('auth_cookie', cookie);
+    }
+%}
+
+
+### Logout
+#@no-redirect
+GET http://localhost:8080/logout
+Cookie: {{auth_cookie}}
+
+
+### Get user
+#@no-redirect
+GET http://localhost:8080/users/{{userId}}
+Cookie: {{auth_cookie}}
+Content-Type: application/json
+
+### Get all users
+#@no-redirect
+GET http://localhost:8080/users
+Cookie: {{auth_cookie}}
+Content-Type: application/json
+
+
+### Update user
+#@no-redirect
+PUT http://localhost:8080/users/{{userId}}
+Cookie: {{auth_cookie}}
+Content-Type: application/json
+
+{
+  "password": "new_pass"
+}
+
+> {%
+ client.global.set('password', 'new_pass')
+ %}
+
+
+### Delete user
+#@no-redirect
+DELETE http://localhost:8080/users/{{userId}}
+Cookie: {{auth_cookie}}
+Content-Type: application/json
+
+
+### Add link
+#@no-redirect
+POST http://localhost:8080/links
+Cookie: {{auth_cookie}}
+Content-Type: application/json
+
+{
+  "url": "https://{{$random.alphabetic(5)}}.com"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set('link_code', response.body.code);
+    }
+ %}
+
+### Get link
+#@no-redirect
+GET http://localhost:8080/links/{{link_code}}
+Cookie: {{auth_cookie}}
+
+### Get all links
+#@no-redirect
+GET http://localhost:8080/links
+Cookie: {{auth_cookie}}
+
+### Redirect
+#@no-redirect
+GET http://localhost:8080/links/redirect/{{link_code}}
+
+### Update link
+#@no-redirect
+PUT http://localhost:8080/links/{{link_code}}
+Content-Type: application/json
+Cookie: {{auth_cookie}}
+
+{
+  "url": "https://youtube.com"
+}
+
+### Delete link
+#@no-redirect
+DELETE http://localhost:8080/links/{{link_code}}
+Cookie: {{auth_cookie}}
